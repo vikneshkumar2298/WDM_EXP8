@@ -1,5 +1,4 @@
 ### EX8 Web Scraping On E-commerce platform using BeautifulSoup
-### DATE: 
 ### AIM: To perform Web Scraping on Amazon using (beautifulsoup) Python.
 ### Description: 
 <div align = "justify">
@@ -28,52 +27,68 @@ One can search, navigate, and modify data using a parser. It’s versatile and s
 ```PYTHON
 import requests
 from bs4 import BeautifulSoup
-import re
-import matplotlib.pyplot as plt
+import time
 
-def convert_price_to_float(price):
-    # Remove currency symbols and commas, and then convert to float
-    price = re.sub(r'[^\d.]', '', price)  # Remove non-digit characters except '.'
-    return float(price) if price else 0.0
+search_query = input("Enter the book name to search: ").strip().lower()
 
-def get_amazon_products(search_query):
-    base_url = 'https://www.amazon.in'
-    headers = {
-        'User-Agent': 'Your User Agent'  # Add your User Agent here
-    }
+base_url = "http://books.toscrape.com/catalogue/page-{}.html"
+num_pages = 5   # You can increase pages if needed
 
-    search_query = search_query.replace(' ', '+')
-    url = f'{base_url}/s?k={search_query}'
+matched_books = []
 
-    response = requests.get(url, headers=headers)
-    products_data = []  # List to store product information
+for page in range(1, num_pages + 1):
+    print(f"Checking page {page}...")
+    
+    url = base_url.format(page)
+    response = requests.get(url)
+    
+    if response.status_code != 200:
+        continue
+    
+    soup = BeautifulSoup(response.text, "html.parser")
+    books = soup.find_all("article", class_="product_pod")
+    
+    for book in books:
+        title = book.h3.a["title"]
+        
+        # Check if user input matches book title
+        if search_query in title.lower():
+            
+            price = book.find("p", class_="price_color").text.strip()
+            availability = book.find("p", class_="instock availability").text.strip()
+            rating_class = book.find("p", class_="star-rating")["class"]
+            rating = rating_class[1]
+            
+            matched_books.append({
+                "Title": title,
+                "Price": price,
+                "Availability": availability,
+                "Rating": rating
+            })
+    
+    time.sleep(1)
 
-    if response.status_code == 200:
-        /* TYPE YOUR CODE HERE
-
-    return sorted(products_data, key=lambda x: convert_price_to_float(x['Price']))
-
-search_query = input('Enter product to search on Amazon: ')
-products = get_amazon_products(search_query)
-
-# Displaying product data using a bar chart
-if products:  # Check if products list is not empty
-    product_names = [product['Product'][:30] if len(product['Product']) > 30 else product['Product'] for product in products]
-    product_prices = [convert_price_to_float(product['Price']) for product in products]
-
-    plt.figure(figsize=(10, 6))
-    plt.barh(range(len(product_prices)), product_prices, color='skyblue')
-    plt.xlabel('Price')
-    plt.ylabel('Product')
-    plt.title(f'Products and their Prices on Amazon for {search_query.capitalize()} (Ascending Order)')
-    plt.yticks(range(len(product_prices)), product_names)  # Setting y-axis labels as shortened product names
-    plt.tight_layout()
-    plt.show()
+# Display Results
+if not matched_books:
+    print("\nNo matching books found.")
 else:
-    print('No products found.')
+    print(f"\nFound {len(matched_books)} matching books:\n")
+    
+    for i, book in enumerate(matched_books, 1):
+        print(f"{i}. Title: {book['Title']}")
+        print(f"   Price: {book['Price']}")
+        print(f"   Availability: {book['Availability']}")
+        print(f"   Rating: {book['Rating']}")
+        print("-" * 60)
+        
 
 ```
 
 ### Output:
 
+<img width="1653" height="672" alt="image" src="https://github.com/user-attachments/assets/ef4d8ddf-7440-43d7-80d5-08798e8de25c" />
+
+
 ### Result:
+
+Thus,Web Scraping On E-commerce platform using BeautifulSoup is done .
